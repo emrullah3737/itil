@@ -1,0 +1,14 @@
+{% macro menu(works, request) %}
+  <div class="ui inverted labeled icon menu">
+    <a href="/" class="item {{'active' if request.originalUrl == '/' else '' }}">
+      <i class="plus icon {{'green' if request.originalUrl == '/' else 'blue' }}"></i>Ürün Ekle
+    </a>
+    <div class="ui inverted labeled icon menu appendMenu" style="overflow-x: auto;">
+      {% for work in works %}
+        <a href="/{{work.id}}" class="item {{'active' if request.originalUrl == '/' + work.id else '' }}">
+          <i class="clone outline icon {{'green' if request.originalUrl == '/' + work.id else 'blue' }}"></i>{{ work.urun }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}

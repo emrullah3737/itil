@@ -1,0 +1,41 @@
+{
+  "name": "myApp",
+  "description": "My App Description",
+  "version": "1.0.0",
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=6.0.0"
+  },
+  "dependencies": {
+    "debug": "^2.6.3",
+    "moment": "^2.22.1",
+    "r2acl": "^1.0.2",
+    "r2base": "^1.0.15",
+    "r2middleware": "^1.0.4",
+    "r2mongoose": "^1.0.3",
+    "r2nunjucks": "^1.0.0",
+    "r2plugin": "^1.0.3",
+    "r2query": "^1.0.7",
+    "r2system": "^1.0.6",
+    "r2user": "^1.0.7"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^15.0.1",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^5.0.3",
+    "eslint-plugin-react": "^7.0.1",
+    "mocha": "^3.2.0",
+    "sinon": "^1.17.5",
+    "sinon-chai": "^2.8.0",
+    "supertest": "^3.0.0"
+  },
+  "main": "index.js",
+  "readmeFilename": "README.md",
+  "keywords": [],
+  "scripts": {
+    "test": "mocha"
+  }
+}

@@ -1,0 +1,191 @@
+{% extends "../layout.html" %}
+
+{% block body %}
+<div class="ui two column grid">
+  <div class="column">
+    <table class="ui selectable celled table">
+      <thead>
+        <tr>
+          <th>Tanım</th>
+          <th>İçerik</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="warning">Ürün</td>
+          <td><div class="ui small header">{{ doc.urun }}</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Toplam süre</td>
+          <td><div class="ui small header">{{ doc.toplamSureGun }} Gün</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Hedeflenen Miktar</td>
+          <td><div class="ui small header">{{ doc.hedeflenenMiktar }} Adet</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Verilen Sürede Yapılacak Olan Miktar</td>
+          {% set miktar = (doc.calisanSayisi * doc.gunlukCalismaSaati * doc.toplamSureGun) / doc.urunZamanMaliyeti %}
+          <td class="{{ 'negative' if miktar < doc.hedeflenenMiktar else 'positive' }}">
+            {% set fark = miktar - doc.hedeflenenMiktar  %}
+            <div class="ui small header">{{ miktar }} Adet ({{ -fark + ' adet eksik' if fark < 0  else fark + 'adet fazla' }})</div>
+          </td>
+        </tr>
+        <tr>
+          <td class="warning">Çalışan Sayısı</td>
+          <td><div class="ui small header">{{ doc.calisanSayisi }} Kişi</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Günlük Çalışma Saati</td>
+          <td><div class="ui small header">{{ doc.gunlukCalismaSaati }} Saat</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Ürün Birim Maliyeti (Zaman)</td>
+          <td><div class="ui small header">{{ doc.urunZamanMaliyeti }} Saat</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Ürün Maliyeti</td>
+          <td class="negative"><div class="ui small header">{{ doc.urunMaliyeti }} TL</div></td>
+        </tr>
+        <tr>
+          <td class="warning">Ürün Birim Fiyatı</td>
+          <td class="positive"><div class="ui small header">{{ doc.urunBirimFiyati }} TL</div></td>
+        </tr>
+        <tr>
+          <td class="positive">Beklenilen Kâr</td>
+          <td class="positive"><div class="ui small header">{{ (doc.urunBirimFiyati - doc.urunMaliyeti) * doc.hedeflenenMiktar }} TL</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="" class="column">
+
+    <form id="urun" class="ui form">
+      <div class="disabled field">
+        <label>Gün</label>
+        <input name="gun" value="{{ (doc.yapilanIsler.length + 1) + '. Gün' if doc.yapilanIsler else '1. Gün' }}" type="text" >
+      </div>
+      <div class="field">
+        <label>Yapılan Ürün</label>
+        <input type="number" name="yapilanAdet" placeholder="Yapılan Ürün">
+      </div>
+      <div class="field">
+        <label>Hatalı Ürün</label>
+        <input type="number" name="yapilmayanAdet" placeholder="Hatalı Ürün">
+      </div>
+      <div class="ui success message">
+        <div class="header">Ekleme Tamamlandı</div>
+        <p>Ürün ekleme süreci başarıyla tamamlandı!</p>
+      </div>
+      <div class="ui error message">
+        <div class="header">Ekleme Hatası</div>
+        <p>Ürün Ekleme sırasında bir hata oluştu!</p>
+      </div>
+      <button class="ui button ekle" type="submit">Ekle</button>
+    </form>
+
+    <div class="ui indicating progress" data-value="{{ doc.yapilanIsler.length }}" data-total="{{ doc.toplamSureGun }}" id="example1">
+      <div class="bar"></div>
+      <div class="label"></div>
+    </div>
+
+    <canvas id="myChart"></canvas>
+  </div>
+</div>
+
+<script>
+  $(document).ready(() => {
+
+    const requestPaths = (window.location.pathname).split('/');
+
+    $('#example1')
+    .progress({
+      text: {
+        active: '{total} günün {value}. günü eklendi',
+        success: '{total} gün bitti'
+      }
+    });
+
+    const canvas = document.getElementById('myChart');
+    const ctx = canvas.getContext('2d');
+
+    const getData = async () => {
+      const { doc: { yapilanIsler, gunlukBeklenenUrun } } = await $.get(`api/work/${requestPaths[1]}`);
+      const data = {
+        datasets: [
+          {
+            data: (() => yapilanIsler.map(e => gunlukBeklenenUrun))(),
+            borderSkipped: 'top',
+            label: ['Günlük Çıkabilecek Ürün'],
+            backgroundColor: '#00B5AD',
+            stack: 'Stack 2',
+          },
+          {
+            data: (() => yapilanIsler.map(e => e.yapilanAdet))(),
+            borderSkipped: 'top',
+            label: ['Çıkarılan Ürün'],
+            backgroundColor: '#B5CC18',
+            stack: 'Stack 0',
+          },
+          {
+            data: (() => yapilanIsler.map(e => e.yapilmayanAdet))(),
+            borderSkipped: 'top',
+            label: ['Hatalı Ürün'],
+            backgroundColor: '#DB2828',
+            stack: 'Stack 1',
+          }],
+        labels: (() => yapilanIsler.map((e, i) => `${i + 1}. Gün`))(),
+      };
+
+    return data;
+    };
+
+    const getChartData = async () => {
+      const data = await getData();
+      const stackedBar = new Chart(ctx, {
+        type: 'bar',
+        data: data,
+        options: {
+          scales: {
+            xAxes: [{
+              stacked: true
+            }],
+            yAxes: [{
+              stacked: true
+            }]
+          }
+        }
+      });
+
+      $("#urun").ajaxForm({
+        url: `/api/work/${requestPaths[1]}`,
+        type: 'put',
+        beforeSubmit: () => {
+          $('#addWork').addClass('loading');
+        },
+        success: async (data) => {
+          const { doc: { n, ok, nModified } } = data;
+          $('#urun').removeClass('loading');
+          $('#urun').removeClass('success');
+          $('#urun').removeClass('error');
+          if (ok) {
+            $('#urun').addClass('success');
+            $('#urun input[name="yapilanAdet"]').val('');
+            $('#urun input[name="yapilmayanAdet"]').val('');
+          } else {
+            return $('#urun').addClass('error');
+          }
+          const lastData = await getData();
+          const gun = parseInt($('input[name=gun]').val(), 10) + 1
+          $('input[name=gun]').val(`${gun}. Gün`);
+          stackedBar.data = lastData;
+          stackedBar.update();
+        },
+      });
+    };
+    getChartData();
+
+  });
+
+</script>
+{% endblock %}

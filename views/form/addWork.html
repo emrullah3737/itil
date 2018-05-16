@@ -1,0 +1,128 @@
+<form id="addWork" class="ui form segment">
+  <div class="ui three column grid">
+    <h4 class="ui horizontal floated divider header">
+      <i class="plus circle icon"></i>
+      Ürün
+    </h4>
+    <div class="column">
+
+      <div class="required field">
+        <label>Ürün</label>
+        <div class="ui left icon input">
+          <input name="urun" type="text" required placeholder="Ürün">
+          <i class="add icon"></i>
+        </div>
+      </div>
+
+      <div class="required field">
+        <label>Hedeflenen Miktar</label>
+        <div class="ui right labeled input">
+          <input name="hedeflenenMiktar" required type="number" placeholder="Hedeflenen miktar">
+          <div class="ui basic label">
+            Adet
+          </div>
+        </div>
+      </div>
+
+      <div class="required field">
+        <label>Toplam Süre</label>
+        <div class="ui right labeled input">
+          <input name="toplamSure" required class="flatpickr flatpickr-input active" type="text" placeholder="Toplam Süre" data-id="multipleCustomConjunction" readonly="readonly">
+          <div class="ui basic label">
+            Gün
+          </div>
+        </div>
+      </div>
+
+      <div class="required field">
+        <label>Çalışan Sayısı</label>
+        <div class="ui right labeled input">
+          <input name="calisanSayisi" required type="number" placeholder="Çalışan Sayısı">
+          <div class="ui basic label">
+            Kişi
+          </div>
+        </div>
+      </div>
+    <input class="ui primary submit button" required type="submit" value="Ekle">
+    </div>
+    <div class="column">
+      <div class="required field">
+        <label>Günlük Çalışma Saati</label>
+        <div class="ui right labeled input">
+          <input name="gunlukCalismaSaati" required type="number" placeholder="Günlük Çalışma Saati">
+          <div class="ui basic label">
+            Saat
+          </div>
+        </div>
+      </div>
+
+      <div class="required field">
+        <label>Ürün Birim Maliyeti (Zaman)</label>
+        <div class="ui right labeled input">
+          <input name="urunZamanMaliyeti" required type="number" placeholder="Ürün Birim Maliyeti (Zaman)">
+          <div class="ui basic label">
+            Saat
+          </div>
+        </div>
+      </div>
+
+      <div class="required field">
+        <label>Ürün Birim Maliyeti</label>
+        <div class="ui right labeled input">
+          <input name="urunMaliyeti" required type="number" step="0.01" placeholder="Ürün Başına Masraf">
+          <div class="ui basic label">
+            TL
+          </div>
+        </div>
+      </div>
+
+      <div class="required field">
+        <label>Ürün Birim Fiyatı</label>
+        <div class="ui right labeled input">
+          <input name="urunBirimFiyati" required type="number" step="0.01" placeholder="Ürün Birim Fiyatı">
+          <div class="ui basic label">
+            TL
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="column"></div>
+  </div>
+  <div class="ui success message">
+    <div class="header">Ekleme Tamamlandı</div>
+    <p>Ürün ekleme süreci başarıyla tamamlandı!</p>
+  </div>
+  <div class="ui error message">
+    <div class="header">Ekleme Hatası</div>
+    <p>Ürün Ekleme sırasında bir hata oluştu!</p>
+  </div>
+</form>
+<script>
+  $(document).ready(() => {
+    $(".flatpickr").flatpickr({ mode: "range" });
+
+    $("#addWork").ajaxForm({
+      url: '/api/work',
+      type: 'post',
+      beforeSubmit: () => {
+        $('#addWork').addClass('loading');
+      },
+      success: (data) => {
+        const { doc: { created, doc } } = data;
+        console.log(data);
+        $('#addWork').removeClass('loading');
+        $('#addWork').removeClass('success');
+        $('#addWork').removeClass('error');
+        if (created) {
+          $('#addWork').addClass('success');
+          $('.appendMenu').append(`
+          <a href="/${doc.id}" class="item">
+            <i class="clone outline icon blue"></i>${doc.urun}
+          </a>`);
+        } else {
+          return $('#addWork').addClass('error');
+        }
+      },
+    });
+  });
+</script>

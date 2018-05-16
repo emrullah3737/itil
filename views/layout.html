@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title>{% block title %}Panel{% endblock %}</title>
+  <link rel="stylesheet" href="semantic.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="jquery.min.js"></script>
+  <script src="semantic.min.js"></script>
+  <script src="requests.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js" integrity="sha384-FzT3vTVGXqf7wRfy8k4BiyzvbNfeYjK+frTVqZeNDFl8woCbF0CYG6g2fMEFFo/i" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+   {% block head %}{% endblock %}
+</head>
+<body>
+  {% import "partial/menu.html" as macro %}
+  {{ macro.menu(works, request) }}
+  <div class="ui container">
+    {% block body %}{% endblock %}
+  </div>
+</body>
+</html>
