@@ -57,8 +57,28 @@
         </tr>
       </tbody>
     </table>
+    {% set kar = 0 %}
+    {% set zarar = 0 %}
+    {% set maliyet = doc.urunMaliyeti %}
+    {% set birimFiyati = doc.urunBirimFiyati %}
+    {% for yIsler in doc.yapilanIsler %}
+      {% set kar = kar + (yIsler.yapilanAdet * (birimFiyati - maliyet)) %}
+      {% set zarar = zarar + (yIsler.yapilmayanAdet * maliyet) %}
+    {% endfor %}
+    {% set toplam = kar - zarar %}
+
+    {% if toplam > 0 %}
+      <h3>Toplam Kâr
+        <a class="ui green tag label">{{ toplam }} TL</a>
+      </h3>
+    {% else %}
+      <h3>Toplam Zarar
+        <a class="ui red tag label">{{ toplam }} TL</a>
+      </h3>
+    {% endif %}
+    <canvas id="myPieChart"></canvas>
   </div>
-  <div style="" class="column">
+  <div class="column">
 
     <form id="urun" class="ui form">
       <div class="disabled field">
@@ -106,8 +126,65 @@
       }
     });
 
+    $('#kar')
+    .progress({
+      text: {
+        active: 'Beklenilen kâr: {total} TL, Toplam kâr: {value} TL',
+        success: '{total} TL elde edildi. '
+      }
+    });
+
     const canvas = document.getElementById('myChart');
     const ctx = canvas.getContext('2d');
+
+    const canvasPie = document.getElementById('myPieChart');
+    const ctxPie = canvasPie.getContext('2d');
+
+    const getDataPie = async () => {
+      const { doc: { yapilanIsler, hedeflenenMiktar } } = await $.get(`api/work/${requestPaths[1]}`);
+      const data = {
+        datasets: [
+        {
+          data: [
+            (function () {
+              let sum = 0;
+              yapilanIsler.forEach(e => {
+                if (e.yapilanAdet) sum += parseInt(e.yapilanAdet, 10);
+              });
+
+              return sum;
+            })(),
+            (function () {
+              let sum = 0;
+              yapilanIsler.forEach(e => {
+                if (e.yapilmayanAdet) sum += parseInt(e.yapilmayanAdet, 10);
+              });
+
+              return sum;
+            })(),
+            (function () {
+              let sum = 0;
+              yapilanIsler.forEach(e => {
+                sum += parseInt(e.yapilanAdet, 10);
+              });
+
+            const kalan = hedeflenenMiktar - sum;
+            if (kalan < 0) return 0;
+            return kalan;
+            })()
+          ],
+          backgroundColor: ['#21BA45', '#DB2828', '#767676'],
+        },
+        ],
+        labels: [
+          'Toplam Çıkarılan Ürün',
+          'Toplam Arızalı Ürün',
+          'Kalan Ürün'
+        ]
+      };
+
+    return data;
+    };
 
     const getData = async () => {
       const { doc: { yapilanIsler, gunlukBeklenenUrun } } = await $.get(`api/work/${requestPaths[1]}`);
@@ -116,7 +193,7 @@
           {
             data: (() => yapilanIsler.map(e => gunlukBeklenenUrun))(),
             borderSkipped: 'top',
-            label: ['Günlük Çıkabilecek Ürün'],
+            label: ['Tahmini Çıkabilecek Ürün'],
             backgroundColor: '#00B5AD',
             stack: 'Stack 2',
           },
@@ -133,15 +210,29 @@
             label: ['Hatalı Ürün'],
             backgroundColor: '#DB2828',
             stack: 'Stack 1',
+          },
+          {
+            data: (() => yapilanIsler.map(e => (e.yapilmayanAdet + e.yapilanAdet)))(),
+            borderSkipped: 'top',
+            label: ['Toplam Ürün'],
+            backgroundColor: '#A5673F',
+            stack: 'Stack 3',
           }],
         labels: (() => yapilanIsler.map((e, i) => `${i + 1}. Gün`))(),
       };
 
-    return data;
+      return data;
     };
 
     const getChartData = async () => {
       const data = await getData();
+      const dataPie = await getDataPie();
+      const myPieChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: dataPie,
+      });
+
+
       const stackedBar = new Chart(ctx, {
         type: 'bar',
         data: data,
@@ -176,10 +267,13 @@
             return $('#urun').addClass('error');
           }
           const lastData = await getData();
+          const lastDataPie = await getDataPie();
           const gun = parseInt($('input[name=gun]').val(), 10) + 1
           $('input[name=gun]').val(`${gun}. Gün`);
           stackedBar.data = lastData;
+          myPieChart.data = lastDataPie;
           stackedBar.update();
+          myPieChart.update();
         },
       });
     };
